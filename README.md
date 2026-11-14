@@ -267,29 +267,29 @@ stateDiagram-v2
 
 ### 4.1 多代理協作框架
 
-本系統將程式碼生成問題形式化為多代理的序列決策過程。設使用者需求為 $q$，代理集合為
+本系統將程式碼生成問題形式化為多代理的序列決策過程。設使用者需求為 $`q`$，代理集合為
 
-$$
+```math
 \mathcal{A} = \{ a_P, a_E, a_R \}
-$$
+```
 
 分別代表開發、執行與審查代理。對話歷史（共享上下文）記為
 
-$$
+```math
 H_t = \langle m_0 = q,\ m_1,\ m_2,\ \dots,\ m_t \rangle
-$$
+```
 
-在第 $t$ 步，被選中的代理 $a^{(t)}$ 根據完整歷史產生下一則訊息：
+在第 $`t`$ 步，被選中的代理 $`a^{(t)}`$ 根據完整歷史產生下一則訊息：
 
-$$
+```math
 m_{t+1} = a^{(t)}(H_t)
-$$
+```
 
 其中：
 
-- $a_P(H_t) = \text{LLM}_P(\text{sys}_P \oplus H_t)$，輸出含程式碼 $c$ 的訊息；
-- $a_E(H_t) = \text{Exec}(\text{extract}(m_t))$，回傳 $(\text{stdout}, \text{stderr}, \text{exitcode})$；
-- $a_R(H_t) = \text{LLM}_R(\text{sys}_R \oplus H_t)$，輸出修改建議或「同意通過」。
+- $`a_P(H_t) = \text{LLM}_P(\text{sys}_P \oplus H_t)`$，輸出含程式碼 $`c`$ 的訊息；
+- $`a_E(H_t) = \text{Exec}(\text{extract}(m_t))`$，回傳 $`(\text{stdout}, \text{stderr}, \text{exitcode})`$；
+- $`a_R(H_t) = \text{LLM}_R(\text{sys}_R \oplus H_t)`$，輸出修改建議或「同意通過」。
 
 由於每個代理都能看到**完整的共享歷史**，審查代理可同時參考原始需求、程式碼與實際執行結果；開發代理在下一輪也能看到錯誤訊息與審查建議，據以修正。
 
@@ -297,9 +297,9 @@ $$
 
 AutoGen 提供多種團隊編排策略，本研究採用 `RoundRobinGroupChat`，發言順序固定為：
 
-$$
+```math
 a^{(t)} = \mathcal{A}\big[\, t \bmod 3 \,\big],\quad \mathcal{A} = [a_P,\ a_E,\ a_R]
-$$
+```
 
 亦即 **Programmer → Executor → Reviewer → Programmer → …**。選擇固定順序而非 `SelectorGroupChat`（由 LLM 動態決定下一位發言者）的理由：
 
@@ -356,11 +356,11 @@ AutoGen 的終止條件可用 `|`（OR）組合。本研究兩個版本的設定
 | `autogen.py` | `TextMentionTermination("同意通過") \| MaxMessageTermination(30)` | 由審查代理語意判定是否通過 |
 | `autogen_ollama.py` | `TextMentionTermination("The POSIX exit code was: 0.") \| MaxMessageTermination(30) \| TextMentionTermination("同意通過")` | 程式**一經成功執行即結束**，或審查通過，或達上限 |
 
-形式化而言，對話在第 $T$ 步結束，其中
+形式化而言，對話在第 $`T`$ 步結束，其中
 
-$$
-T = \min\Big\{\, t \;\Big|\; \texttt{"同意通過"} \in m_t \;\lor\; \texttt{exit}(m_t) = 0 \;\lor\; t \ge 30 \Big\}
-$$
+```math
+T = \min\Big\{\, t \;\Big|\; \text{「同意通過」} \in m_t \;\lor\; \mathrm{exit}(m_t) = 0 \;\lor\; t \ge 30 \Big\}
+```
 
 - **語意終止**：讓審查代理以自然語言決定品質是否達標；
 - **執行成功終止**：以客觀訊號提早結束，大幅減少本地小模型的推論輪數與等待時間；

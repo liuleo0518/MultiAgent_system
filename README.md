@@ -13,6 +13,19 @@
 
 ---
 
+## English Summary
+
+A multi-agent system that generates, runs and reviews Python code, built with Microsoft **AutoGen AgentChat** and **locally hosted LLMs** (Ollama). No external API is used, so requirements and source code never leave the machine.
+
+- **Three agents in a round-robin loop:** a *Programmer* writes the code, a *Code Executor* (no LLM) runs it locally and returns stdout, stderr and the exit code, and a *Code Reviewer* reads the result and either suggests fixes or approves. The loop stops when the program runs successfully, the reviewer approves, or 30 messages are reached.
+- **Heterogeneous models:** the Programmer and Reviewer use different Qwen2.5-based models (a self fine-tuned quantized model and `qwen2.5-coder`).
+- **Live web UI:** a Next.js front end (initial scaffold generated with v0) posts a task to an API route that spawns the Python process, parses each agent's output and streams it to the browser as NDJSON, so every agent message appears in real time.
+- **Known limitation:** the executor runs LLM-generated code directly on the host without a sandbox, so use it only on a trusted personal machine (see Section 8.1).
+
+**Quick start:** `ollama pull qwen2.5-coder` -> `pip install -r requirements.txt` -> `pnpm install` -> `pnpm dev` -> open http://localhost:3000. Details are in the Chinese sections below.
+
+---
+
 ## 目錄
 
 1. [摘要](#摘要)
@@ -383,7 +396,7 @@ T = \min\Big\{\, t \;\Big|\; \text{「同意通過」} \in m_t \;\lor\; \mathrm{
 - **my_qwen2.5_newQ8_py**：以 Qwen2.5 為基底、針對 Python 程式碼任務自行微調之模型，以 Q8_0 量化；
 - **my_unsloth.Q4_K_M**：以 Unsloth 微調並匯出為 Q4_K_M GGUF 量化的模型。
 
-> 微調資料集與超參數等細節，可依實際訓練設定補充於此。
+> 微調所用的資料集與超參數未包含在本 repo 中。
 
 **異質模型配置**的動機在於：若開發與審查使用同一模型，模型可能對自己產生的錯誤具有相同的盲點；以不同模型（或不同微調版本）分擔兩個角色，可提供較獨立的「第二意見」。兩個版本恰好互換了微調模型與 qwen2.5-coder 的角色，可作為比較兩種配置的實驗基礎。
 
@@ -449,7 +462,7 @@ Node.js 的 `Readable` 串流再經 `nodeStreamToWebStream()` 轉為 Web `Readab
 ### 5.1 專案結構
 
 ```text
-MutiAgent_system/
+MultiAgent_system/
 ├── app/
 │   ├── api/
 │   │   ├── autogen/route.ts     # 主要 API：啟動 Python 多代理系統並串流回傳
